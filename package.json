@@ -1,0 +1,50 @@
+{
+    "name": "jfol",
+    "version": "0.0.1",
+    "description": "JSON Formation Language",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "lint": "eslint src/**/*.ts"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/jest": "^24.0.18",
+        "@types/node": "^12.7.11",
+        "@typescript-eslint/eslint-plugin": "^2.3.2",
+        "@typescript-eslint/parser": "^2.3.2",
+        "eslint": "^6.5.1",
+        "eslint-config-prettier": "^6.3.0",
+        "eslint-plugin-prettier": "^3.1.1",
+        "jest": "^24.9.0",
+        "jest-circus": "^24.9.0",
+        "prettier": "^1.18.2",
+        "ts-jest": "^24.1.0",
+        "typescript": "^3.6.3"
+    },
+    "prettier": {
+        "printWidth": 120,
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": false
+    },
+    "jest": {
+        "clearMocks": true,
+        "moduleFileExtensions": [
+            "js",
+            "ts"
+        ],
+        "testEnvironment": "node",
+        "testMatch": [
+            "**/*.test.ts"
+        ],
+        "testRunner": "jest-circus/runner",
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
+        "verbose": true
+    }
+}

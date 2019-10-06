@@ -535,7 +535,7 @@ class Parser {
 }
 exports.Parser = Parser;
 
-},{"../nodes/expression_node":35,"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/literal_node":38,"../nodes/operator_node":39}],2:[function(require,module,exports){
+},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/operator_node":40}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const compiler_plugin_1 = require("./compiler_plugin");
@@ -550,10 +550,12 @@ const where_function_1 = require("./functions/where_function");
 const lexer_1 = require("../lexers/lexer");
 const parser_1 = require("../ast/parser");
 const analyzer_1 = require("../semantic/analyzer");
+const eval_function_1 = require("./functions/eval_function");
 class FormatCompilerPlugin extends compiler_plugin_1.CompilerPlugin {
     constructor() {
         super(...arguments);
         this.functions = [
+            ["eval", (x, y) => new eval_function_1.EvalFunction(this, x, y)],
             ["if", (x, y) => new if_function_1.IfFunction(this, x, y)],
             ["index", (x, y) => new index_function_1.IndexFunction(this, x, y)],
             ["length", (x, y) => new length_function_1.LengthFunction(this, x, y)],
@@ -584,7 +586,7 @@ class Compiler {
 }
 exports.Compiler = Compiler;
 
-},{"../ast/parser":1,"../lexers/lexer":34,"../semantic/analyzer":41,"./compiler_plugin":3,"./context":4,"./functions/if_function":7,"./functions/index_function":8,"./functions/length_function":9,"./functions/number_function":10,"./functions/separator_function":11,"./functions/value_function":12,"./functions/where_function":13}],3:[function(require,module,exports){
+},{"../ast/parser":1,"../lexers/lexer":35,"../semantic/analyzer":42,"./compiler_plugin":3,"./context":4,"./functions/eval_function":7,"./functions/if_function":8,"./functions/index_function":9,"./functions/length_function":10,"./functions/number_function":11,"./functions/separator_function":12,"./functions/value_function":13,"./functions/where_function":14}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -709,7 +711,7 @@ class CompilerPlugin {
 }
 exports.CompilerPlugin = CompilerPlugin;
 
-},{"../nodes/expression_node":35,"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/literal_node":38,"../nodes/text_node":40,"./field":5,"./literals/boolean_object":14,"./literals/null_object":15,"./literals/number_object":16,"./literals/string_object":17,"./operators/asterisk_operator":19,"./operators/double_ampersand_operator":20,"./operators/double_vertical_line_operator":21,"./operators/equal_operator":22,"./operators/greater_than_operator":23,"./operators/greater_than_or_equal_operator":24,"./operators/less_than_operator":25,"./operators/less_than_or_equal_operator":26,"./operators/minus_operator":27,"./operators/not_equal_operator":28,"./operators/percent_operator":29,"./operators/plus_operator":30,"./operators/slash_operator":31,"./text":32}],4:[function(require,module,exports){
+},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/text_node":41,"./field":5,"./literals/boolean_object":15,"./literals/null_object":16,"./literals/number_object":17,"./literals/string_object":18,"./operators/asterisk_operator":20,"./operators/double_ampersand_operator":21,"./operators/double_vertical_line_operator":22,"./operators/equal_operator":23,"./operators/greater_than_operator":24,"./operators/greater_than_or_equal_operator":25,"./operators/less_than_operator":26,"./operators/less_than_or_equal_operator":27,"./operators/minus_operator":28,"./operators/not_equal_operator":29,"./operators/percent_operator":30,"./operators/plus_operator":31,"./operators/slash_operator":32,"./text":33}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Context {
@@ -939,7 +941,7 @@ class Field {
 }
 exports.Field = Field;
 
-},{"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/text_node":40,"./functions/separator_function":11,"./functions/where_function":13}],6:[function(require,module,exports){
+},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/text_node":41,"./functions/separator_function":12,"./functions/where_function":14}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -983,7 +985,40 @@ class Function {
 }
 exports.Function = Function;
 
-},{"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/text_node":40}],7:[function(require,module,exports){
+},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/text_node":41}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class EvalFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        if (this.functionArguments == null || this.functionArguments.length != 1) {
+            throw Error("eval function must have single argument");
+        }
+        this.evalFunction = this.functionArguments[0];
+        if (this.functionBodies != null) {
+            throw Error("eval function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        return this.evalFunction.executeString();
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.EvalFunction = EvalFunction;
+
+},{"../function":6}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1026,7 +1061,7 @@ class IfFunction extends function_1.Function {
 }
 exports.IfFunction = IfFunction;
 
-},{"../function":6}],8:[function(require,module,exports){
+},{"../function":6}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1059,7 +1094,7 @@ class IndexFunction extends function_1.Function {
 }
 exports.IndexFunction = IndexFunction;
 
-},{"../function":6}],9:[function(require,module,exports){
+},{"../function":6}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1098,7 +1133,7 @@ class LengthFunction extends function_1.Function {
 }
 exports.LengthFunction = LengthFunction;
 
-},{"../function":6}],10:[function(require,module,exports){
+},{"../function":6}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1131,7 +1166,7 @@ class NumberFunction extends function_1.Function {
 }
 exports.NumberFunction = NumberFunction;
 
-},{"../function":6}],11:[function(require,module,exports){
+},{"../function":6}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1168,7 +1203,7 @@ class SeparatorFunction extends function_1.Function {
 }
 exports.SeparatorFunction = SeparatorFunction;
 
-},{"../function":6}],12:[function(require,module,exports){
+},{"../function":6}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1234,7 +1269,7 @@ class ValueFunction extends function_1.Function {
 }
 exports.ValueFunction = ValueFunction;
 
-},{"../function":6}],13:[function(require,module,exports){
+},{"../function":6}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1270,7 +1305,7 @@ class WhereFunction extends function_1.Function {
 }
 exports.WhereFunction = WhereFunction;
 
-},{"../function":6}],14:[function(require,module,exports){
+},{"../function":6}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class BooleanObject {
@@ -1295,7 +1330,7 @@ class BooleanObject {
 }
 exports.BooleanObject = BooleanObject;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class NullObject {
@@ -1320,7 +1355,7 @@ class NullObject {
 }
 exports.NullObject = NullObject;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class NumberObject {
@@ -1345,7 +1380,7 @@ class NumberObject {
 }
 exports.NumberObject = NumberObject;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class StringObject {
@@ -1370,7 +1405,7 @@ class StringObject {
 }
 exports.StringObject = StringObject;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -1407,7 +1442,7 @@ class Operator {
 }
 exports.Operator = Operator;
 
-},{"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/literal_node":38}],19:[function(require,module,exports){
+},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1437,7 +1472,7 @@ class AsteriskOperator extends operator_1.Operator {
 }
 exports.AsteriskOperator = AsteriskOperator;
 
-},{"../operator":18}],20:[function(require,module,exports){
+},{"../operator":19}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1467,7 +1502,7 @@ class DoubleAmpersandOperator extends operator_1.Operator {
 }
 exports.DoubleAmpersandOperator = DoubleAmpersandOperator;
 
-},{"../operator":18}],21:[function(require,module,exports){
+},{"../operator":19}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1497,7 +1532,7 @@ class DoubleVerticalLineOperator extends operator_1.Operator {
 }
 exports.DoubleVerticalLineOperator = DoubleVerticalLineOperator;
 
-},{"../operator":18}],22:[function(require,module,exports){
+},{"../operator":19}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1536,7 +1571,7 @@ class EqualOperator extends operator_1.Operator {
 }
 exports.EqualOperator = EqualOperator;
 
-},{"../operator":18}],23:[function(require,module,exports){
+},{"../operator":19}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1566,7 +1601,7 @@ class GreaterThanOperator extends operator_1.Operator {
 }
 exports.GreaterThanOperator = GreaterThanOperator;
 
-},{"../operator":18}],24:[function(require,module,exports){
+},{"../operator":19}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1596,7 +1631,7 @@ class GreaterThanOrEqualOperator extends operator_1.Operator {
 }
 exports.GreaterThanOrEqualOperator = GreaterThanOrEqualOperator;
 
-},{"../operator":18}],25:[function(require,module,exports){
+},{"../operator":19}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1626,7 +1661,7 @@ class LessThanOperator extends operator_1.Operator {
 }
 exports.LessThanOperator = LessThanOperator;
 
-},{"../operator":18}],26:[function(require,module,exports){
+},{"../operator":19}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1656,7 +1691,7 @@ class LessThanOrEqualOperator extends operator_1.Operator {
 }
 exports.LessThanOrEqualOperator = LessThanOrEqualOperator;
 
-},{"../operator":18}],27:[function(require,module,exports){
+},{"../operator":19}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1686,7 +1721,7 @@ class MinusOperator extends operator_1.Operator {
 }
 exports.MinusOperator = MinusOperator;
 
-},{"../operator":18}],28:[function(require,module,exports){
+},{"../operator":19}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1725,7 +1760,7 @@ class NotEqualOperator extends operator_1.Operator {
 }
 exports.NotEqualOperator = NotEqualOperator;
 
-},{"../operator":18}],29:[function(require,module,exports){
+},{"../operator":19}],30:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1755,7 +1790,7 @@ class PercentOperator extends operator_1.Operator {
 }
 exports.PercentOperator = PercentOperator;
 
-},{"../operator":18}],30:[function(require,module,exports){
+},{"../operator":19}],31:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1814,7 +1849,7 @@ class PlusOperator extends operator_1.Operator {
 }
 exports.PlusOperator = PlusOperator;
 
-},{"../operator":18}],31:[function(require,module,exports){
+},{"../operator":19}],32:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1844,7 +1879,7 @@ class SlashOperator extends operator_1.Operator {
 }
 exports.SlashOperator = SlashOperator;
 
-},{"../operator":18}],32:[function(require,module,exports){
+},{"../operator":19}],33:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TextObject {
@@ -1869,7 +1904,7 @@ class TextObject {
 }
 exports.TextObject = TextObject;
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const compiler_1 = require("./compilers/compiler");
@@ -1887,7 +1922,7 @@ form.getElementsByTagName("input")[0].onclick = function () {
     form.getElementsByTagName("textarea")[2].value = text;
 };
 
-},{"./compilers/compiler":2}],34:[function(require,module,exports){
+},{"./compilers/compiler":2}],35:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Lexer {
@@ -2070,7 +2105,7 @@ class Lexer {
 }
 exports.Lexer = Lexer;
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2079,7 +2114,7 @@ function isExpressionNode(arg) {
 }
 exports.isExpressionNode = isExpressionNode;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2098,7 +2133,7 @@ function isFieldParentNodeWithBody(arg) {
 }
 exports.isFieldParentNodeWithBody = isFieldParentNodeWithBody;
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2127,7 +2162,7 @@ function isFunctionParentNodeWithArgumentAndBody(arg) {
 }
 exports.isFunctionParentNodeWithArgumentAndBody = isFunctionParentNodeWithArgumentAndBody;
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2156,7 +2191,7 @@ function isLiteralNode(arg) {
 }
 exports.isLiteralNode = isLiteralNode;
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2165,7 +2200,7 @@ function isOperatorNode(arg) {
 }
 exports.isOperatorNode = isOperatorNode;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2174,7 +2209,7 @@ function isTextNode(arg) {
 }
 exports.isTextNode = isTextNode;
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const field_node_1 = require("../nodes/field_node");
@@ -2299,6 +2334,7 @@ class Analyzer {
                     operatorStack.unshift(node);
                 }
                 else {
+                    // ToDo: Fix: $$eval(true==true&&false==false)
                     while (currentOperatorLevel < firstOperatorLevel) {
                         const tempOperator = operatorStack.shift();
                         if (tempOperator == undefined) {
@@ -2325,8 +2361,11 @@ class Analyzer {
             const secondValue = result.expression.shift();
             result.expression.unshift({ expression: [node, firstValue, secondValue] });
         }
+        console.log(operatorStack);
+        console.log(reversePolishNotation);
         // result will be single ExpressionNode
         if (result.expression.length != 1) {
+            console.log(result);
             throw Error("internal analyzer error");
         }
         if (expression_node_1.isExpressionNode(result.expression[0]) == false) {
@@ -2370,4 +2409,4 @@ class Analyzer {
 }
 exports.Analyzer = Analyzer;
 
-},{"../nodes/expression_node":35,"../nodes/field_node":36,"../nodes/function_node":37,"../nodes/literal_node":38,"../nodes/operator_node":39}]},{},[33]);
+},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/operator_node":40}]},{},[34]);

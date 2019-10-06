@@ -12,9 +12,11 @@ import { WhereFunction } from "./functions/where_function";
 import { Lexer } from "../lexers/lexer";
 import { Parser } from "../ast/parser";
 import { Analyzer } from "../semantic/analyzer";
+import { EvalFunction } from "./functions/eval_function";
 
 class FormatCompilerPlugin extends CompilerPlugin {
     functions: [string, (arg0: Context, arg1: FunctionParentNode) => Function][] = [
+        ["eval", (x, y) => new EvalFunction(this, x, y)],
         ["if", (x, y) => new IfFunction(this, x, y)],
         ["index", (x, y) => new IndexFunction(this, x, y)],
         ["length", (x, y) => new LengthFunction(this, x, y)],

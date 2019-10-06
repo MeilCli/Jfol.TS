@@ -155,6 +155,7 @@ export class Analyzer {
                 if (firstOperatorLevel <= currentOperatorLevel) {
                     operatorStack.unshift(node);
                 } else {
+                    // ToDo: Fix: $$eval(true==true&&false==false)
                     while (currentOperatorLevel < firstOperatorLevel) {
                         const tempOperator = operatorStack.shift();
                         if (tempOperator == undefined) {
@@ -182,8 +183,12 @@ export class Analyzer {
             result.expression.unshift({ expression: [node, firstValue, secondValue] } as ExpressionNode);
         }
 
+        console.log(operatorStack);
+        console.log(reversePolishNotation);
+
         // result will be single ExpressionNode
         if (result.expression.length != 1) {
+            console.log(result);
             throw Error("internal analyzer error");
         }
         if (isExpressionNode(result.expression[0]) == false) {

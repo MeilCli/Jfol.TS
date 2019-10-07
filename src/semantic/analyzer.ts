@@ -152,18 +152,20 @@ export class Analyzer {
                     firstOperatorLevel = 0; // min level
                 }
 
-                if (firstOperatorLevel <= currentOperatorLevel) {
-                    operatorStack.unshift(node);
-                } else {
-                    // ToDo: Fix: $$eval(true==true&&false==false)
-                    while (currentOperatorLevel < firstOperatorLevel) {
-                        const tempOperator = operatorStack.shift();
-                        if (tempOperator == undefined) {
-                            break;
-                        }
-                        reversePolishNotation.push(tempOperator);
+                while (currentOperatorLevel < firstOperatorLevel) {
+                    const tempOperator = operatorStack.shift();
+                    if (tempOperator == undefined) {
+                        break;
+                    }
+                    reversePolishNotation.push(tempOperator);
+
+                    if (operatorStack.length != 0) {
+                        firstOperatorLevel = operatorLevel(operatorStack[0]);
+                    } else {
+                        firstOperatorLevel = 0; // min level
                     }
                 }
+                operatorStack.unshift(node);
             } else {
                 throw Error("internal parser error");
             }
@@ -178,17 +180,15 @@ export class Analyzer {
                 result.expression.unshift(node);
                 continue;
             }
-            const firstValue = result.expression.shift();
+
+            // firstValue(a.k.a left) will be second on stack
             const secondValue = result.expression.shift();
+            const firstValue = result.expression.shift();
             result.expression.unshift({ expression: [node, firstValue, secondValue] } as ExpressionNode);
         }
 
-        console.log(operatorStack);
-        console.log(reversePolishNotation);
-
         // result will be single ExpressionNode
         if (result.expression.length != 1) {
-            console.log(result);
             throw Error("internal analyzer error");
         }
         if (isExpressionNode(result.expression[0]) == false) {

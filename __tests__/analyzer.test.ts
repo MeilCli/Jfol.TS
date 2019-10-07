@@ -103,14 +103,14 @@ test("argument parse2", () => {
                     {
                         expression: [
                             { operator: "+" } as OperatorNode,
+                            { numberValue: 10 } as NumberNode,
                             {
                                 expression: [
                                     { operator: "*" } as OperatorNode,
-                                    { numberValue: 30 } as NumberNode,
-                                    { numberValue: 20 } as NumberNode
+                                    { numberValue: 20 } as NumberNode,
+                                    { numberValue: 30 } as NumberNode
                                 ]
-                            } as ExpressionNode,
-                            { numberValue: 10 } as NumberNode
+                            } as ExpressionNode
                         ]
                     } as ExpressionNode
                 ] as ExpressionNode[]
@@ -135,26 +135,26 @@ test("argument parse3", () => {
                     {
                         expression: [
                             { operator: "+" } as OperatorNode,
+                            { numberValue: 10 } as NumberNode,
                             {
                                 expression: [
                                     { operator: "*" } as OperatorNode,
+                                    { numberValue: 20 } as NumberNode,
                                     {
                                         expression: [
                                             { operator: "*" } as OperatorNode,
+                                            { numberValue: 30 } as NumberNode,
                                             {
                                                 expression: [
                                                     { operator: "+" } as OperatorNode,
                                                     { numberValue: 10 } as NumberNode,
                                                     { numberValue: 20 } as NumberNode
                                                 ]
-                                            } as ExpressionNode,
-                                            { numberValue: 30 } as NumberNode
+                                            } as ExpressionNode
                                         ]
-                                    } as ExpressionNode,
-                                    { numberValue: 20 } as NumberNode
+                                    } as ExpressionNode
                                 ]
-                            } as ExpressionNode,
-                            { numberValue: 10 } as NumberNode
+                            } as ExpressionNode
                         ]
                     } as ExpressionNode
                 ] as ExpressionNode[]

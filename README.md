@@ -1,4 +1,4 @@
-# Jfol.Ts
+# Jfol.TS
 
 [Jfol](https://github.com/MeilCli/Jfol) TypeScript implementation
 

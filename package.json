@@ -4,9 +4,11 @@
     "description": "JSON Formation Language",
     "main": "index.js",
     "scripts": {
+        "publish": "npm run build && npm run lint && npm run test && npm run bundle",
         "build": "tsc",
         "test": "jest",
-        "lint": "eslint src/**/*.ts"
+        "lint": "eslint src/**/*.ts",
+        "bundle": "browserify lib/index.js -o docs/index.js"
     },
     "keywords": [],
     "author": "",
@@ -16,6 +18,7 @@
         "@types/node": "^12.7.11",
         "@typescript-eslint/eslint-plugin": "^2.3.2",
         "@typescript-eslint/parser": "^2.3.2",
+        "browserify": "^16.5.0",
         "eslint": "^6.5.1",
         "eslint-config-prettier": "^6.3.0",
         "eslint-plugin-prettier": "^3.1.1",

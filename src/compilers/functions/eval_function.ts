@@ -27,6 +27,15 @@ export class EvalFunction extends Function {
     }
 
     executeString(): string {
+        if (this.evalFunction.objectTypes().includes("Number")) {
+            return String(this.evalFunction.executeNumber());
+        }
+        if (this.evalFunction.objectTypes().includes("Boolean")) {
+            return String(this.evalFunction.executeBoolean());
+        }
+        if (this.evalFunction.objectTypes().includes("Null")) {
+            return String(this.evalFunction.executeNull());
+        }
         return this.evalFunction.executeString();
     }
 

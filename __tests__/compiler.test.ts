@@ -152,3 +152,18 @@ test("array - where - compile", () => {
 
     expect(compiler.format(jfol, json)).toBe(`value: 1`);
 });
+
+test("array - root - compile", () => {
+    const compiler = new Compiler();
+    const json = `[
+    {
+        "value": 1
+    },
+    {
+        "value": 2
+    }
+]`;
+    const jfol = `$[value: $value$$where($value==1)]`;
+
+    expect(compiler.format(jfol, json)).toBe(`value: 1`);
+});

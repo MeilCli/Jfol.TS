@@ -71,6 +71,9 @@ export class Field implements Object {
     }
 
     private hasNextInArray(): boolean {
+        if (this.identifier.length == 0) {
+            return this.index < this.context.getNumber("length");
+        }
         return this.index < this.context.getArray(this.identifier).getNumber("length");
     }
 
@@ -133,7 +136,7 @@ export class Field implements Object {
     }
 
     executeString(): string {
-        if (this.fieldBodies == null && this.context.isArray(this.identifier) == false) {
+        if (this.fieldBodies == null && this.identifier.length != 0 && this.context.isArray(this.identifier) == false) {
             return this.context.getString(this.identifier);
         }
 

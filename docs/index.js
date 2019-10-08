@@ -845,6 +845,9 @@ class Field {
         });
     }
     hasNextInArray() {
+        if (this.identifier.length == 0) {
+            return this.index < this.context.getNumber("length");
+        }
         return this.index < this.context.getArray(this.identifier).getNumber("length");
     }
     applyCurrentFieldBodiesInArray() {
@@ -901,7 +904,7 @@ class Field {
         throw new Error("Method not implemented.");
     }
     executeString() {
-        if (this.fieldBodies == null && this.context.isArray(this.identifier) == false) {
+        if (this.fieldBodies == null && this.identifier.length != 0 && this.context.isArray(this.identifier) == false) {
             return this.context.getString(this.identifier);
         }
         if (this.fieldBodies != null && this.context.isObject(this.identifier)) {

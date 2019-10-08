@@ -81,6 +81,14 @@ test("escape", () => {
     );
 });
 
+test("escape sequence", () => {
+    const lexer = new Lexer();
+    const source = "\\ntext\\rhello";
+    const tokens = lexer.analyzeToken(source);
+
+    testTokens([{ rawText: "\ntext", type: "Text" }, { rawText: "\rhello", type: "Text" }], tokens);
+});
+
 test("oprator", () => {
     const lexer = new Lexer();
     const source = `"Text \\"A\\""==1+2*3/4&&true||false`;

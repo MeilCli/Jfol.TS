@@ -1954,7 +1954,7 @@ class Lexer {
                 case "BackSlash":
                     if (nextToken != null && this.isEscapable(nextToken)) {
                         tokens.push({
-                            rawText: nextToken.rawText,
+                            rawText: this.getEscapedText(nextToken),
                             type: "Text"
                         });
                         i += 1;
@@ -1999,8 +1999,60 @@ class Lexer {
             case "BackSlash":
             case "DoubleQuotation":
                 return true;
+            case "Text":
+                if (rawToken.rawText.length == 0) {
+                    return false;
+                }
+                switch (rawToken.rawText[0]) {
+                    case "0":
+                    case "b":
+                    case "f":
+                    case "n":
+                    case "r":
+                    case "t":
+                    case "v":
+                        return true;
+                    default:
+                        return false;
+                }
             default:
                 return false;
+        }
+    }
+    getEscapedText(rawToken) {
+        switch (rawToken.type) {
+            case "Dollar":
+            case "LeftParenthesis":
+            case "RightParenthesis":
+            case "LeftSquareBracket":
+            case "RightSquareBracket":
+            case "BackSlash":
+            case "DoubleQuotation":
+                return rawToken.rawText;
+            case "Text":
+                if (rawToken.rawText.length == 0) {
+                    throw Error("internal lexer error");
+                }
+                switch (rawToken.rawText[0]) {
+                    case "0":
+                        return `\0${rawToken.rawText.substring(1)}`;
+                    case "b":
+                        return `\b${rawToken.rawText.substring(1)}`;
+                    case "f":
+                        return `\f${rawToken.rawText.substring(1)}`;
+                    case "n":
+                        return `\n${rawToken.rawText.substring(1)}`;
+                    case "r":
+                        return `\r${rawToken.rawText.substring(1)}`;
+                    case "t":
+                        return `\t${rawToken.rawText.substring(1)}`;
+                    case "v":
+                        return `\v${rawToken.rawText.substring(1)}`;
+                    default:
+                        throw Error("internal lexer error");
+                }
+            default:
+                throw Error("internal lexer error");
         }
     }
     analyzeRawToken(source) {

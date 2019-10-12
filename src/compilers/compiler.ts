@@ -14,12 +14,14 @@ import { Parser } from "../ast/parser";
 import { Analyzer } from "../semantic/analyzer";
 import { EvalFunction } from "./functions/eval_function";
 import { ParentFunction } from "./functions/parent_function";
+import { JsonFunction } from "./functions/json_function";
 
 class FormatCompilerPlugin extends CompilerPlugin {
     functions: [string, (arg0: Context, arg1: FunctionParentNode) => Function][] = [
         ["eval", (x, y) => new EvalFunction(this, x, y)],
         ["if", (x, y) => new IfFunction(this, x, y)],
         ["index", (x, y) => new IndexFunction(this, x, y)],
+        ["json", (x, y) => new JsonFunction(this, x, y)],
         ["length", (x, y) => new LengthFunction(this, x, y)],
         ["number", (x, y) => new NumberFunction(this, x, y)],
         ["parent", (x, y) => new ParentFunction(this, x, y)],

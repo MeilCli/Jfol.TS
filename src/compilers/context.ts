@@ -41,12 +41,20 @@ export class Context {
         return String(this.instance[nameOrIndex]);
     }
 
+    setString(nameOrIndex: string | number, value: string) {
+        this.instance[nameOrIndex] = value;
+    }
+
     isNumber(nameOrIndex: string | number): boolean {
         return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "number";
     }
 
     getNumber(nameOrIndex: string | number): number {
         return Number(this.instance[nameOrIndex]);
+    }
+
+    setNumber(nameOrIndex: string | number, value: number) {
+        this.instance[nameOrIndex] = value;
     }
 
     isBoolean(nameOrIndex: string | number): boolean {
@@ -57,12 +65,20 @@ export class Context {
         return Boolean(this.instance[nameOrIndex]);
     }
 
+    setBoolean(nameOrIndex: string | number, value: boolean) {
+        this.instance[nameOrIndex] = value;
+    }
+
     isNull(nameOrIndex: string | number): boolean {
         return (
             nameOrIndex in this.instance &&
             typeof this.instance[nameOrIndex] == "object" &&
             this.instance[nameOrIndex] == null
         );
+    }
+
+    setNull(nameOrIndex: string | number) {
+        this.instance[nameOrIndex] = null;
     }
 
     isObject(nameOrIndex: string | number): boolean {
@@ -81,6 +97,10 @@ export class Context {
         return new Context(this.instance[nameOrIndex], this);
     }
 
+    setObject(nameOrIndex: string | number, value: object) {
+        this.instance[nameOrIndex] = value;
+    }
+
     isArray(nameOrIndex: string | number): boolean {
         return (
             nameOrIndex in this.instance &&
@@ -94,5 +114,9 @@ export class Context {
             return new Context(this.instance[nameOrIndex], this, nameOrIndex, this.getNumber("length"));
         }
         return new Context(this.instance[nameOrIndex], this);
+    }
+
+    setArray(nameOrIndex: string | number, value: object[]) {
+        this.instance[nameOrIndex] = value;
     }
 }

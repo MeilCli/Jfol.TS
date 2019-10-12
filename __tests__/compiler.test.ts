@@ -180,3 +180,31 @@ test("parent", () => {
 
     expect(compiler.format(jfol, json)).toBe(`hello`);
 });
+
+test("json", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$$json`;
+    const text = `{"value":{"text":"test"},"text":"hello"}`;
+
+    expect(compiler.format(jfol, json)).toBe(text);
+});
+
+test("json with argument", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$$json($value)`;
+    const text = `{"text":"test"}`;
+
+    expect(compiler.format(jfol, json)).toBe(text);
+});

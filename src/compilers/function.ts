@@ -22,13 +22,9 @@ export abstract class Function implements Object {
         this.functionIdentifires = functionParentNode.functionNodes.map(x => x.functionIdentifier);
 
         if (isFunctionParentNodeWithArgument(functionParentNode)) {
-            this.functionArguments = functionParentNode.functionArguments.map(x => {
-                if (x.expression.length == 1) {
-                    return compilerPlugin.getLiteralObject(x.expression[0] as LiteralNode);
-                } else {
-                    return compilerPlugin.getOperatorObject(context, x);
-                }
-            });
+            this.functionArguments = functionParentNode.functionArguments.map(x =>
+                compilerPlugin.getObject(context, x)
+            );
         } else {
             this.functionArguments = null;
         }

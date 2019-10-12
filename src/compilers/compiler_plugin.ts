@@ -49,11 +49,14 @@ export abstract class CompilerPlugin {
         if (isFieldParentNode(node)) {
             return this.getFieldObject(context, node);
         }
+        if (isExpressionNode(node)) {
+            if (node.expression.length == 1) {
+                return this.getObject(context, node.expression[0]);
+            }
+            return this.getOperatorObject(context, node);
+        }
         if (isLiteralNode(node)) {
             return this.getLiteralObject(node);
-        }
-        if (isExpressionNode(node)) {
-            return this.getOperatorObject(context, node);
         }
 
         throw Error("internal compiler error, cannot handle node");

@@ -116,11 +116,13 @@ export class Field implements Object {
     }
 
     objectTypes(): ObjectType[] {
-        if (
-            this.context.isArray(this.identifier) ||
-            this.context.isObject(this.identifier) ||
-            this.context.isString(this.identifier)
-        ) {
+        if (this.context.isObject(this.identifier)) {
+            return ["Object"];
+        }
+        if (this.context.isArray(this.identifier)) {
+            return ["Array"];
+        }
+        if (this.context.isString(this.identifier)) {
             return ["String"];
         }
         if (this.context.isNumber(this.identifier)) {

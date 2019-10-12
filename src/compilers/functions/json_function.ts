@@ -38,12 +38,12 @@ export class JsonFunction extends Function {
 
     executeString(): string {
         if (this.instance == null) {
-            return JSON.stringify(this.context.instance);
+            return JSON.stringify(this.context.instance, null, 4);
         }
         if (this.instance.objectTypes().includes("Array")) {
-            return JSON.stringify(this.instance.executeArray());
+            return JSON.stringify(this.instance.executeArray(), null, 4);
         }
-        return JSON.stringify(this.instance.executeObject());
+        return JSON.stringify(this.instance.executeObject(), null, 4);
     }
 
     executeBoolean(): boolean {

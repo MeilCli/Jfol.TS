@@ -190,7 +190,12 @@ test("json", () => {
     "text": "hello"
 }`;
     const jfol = `$$json`;
-    const text = `{"value":{"text":"test"},"text":"hello"}`;
+    const text = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
 
     expect(compiler.format(jfol, json)).toBe(text);
 });
@@ -204,7 +209,9 @@ test("json with argument", () => {
     "text": "hello"
 }`;
     const jfol = `$$json($value)`;
-    const text = `{"text":"test"}`;
+    const text = `{
+    "text": "test"
+}`;
 
     expect(compiler.format(jfol, json)).toBe(text);
 });

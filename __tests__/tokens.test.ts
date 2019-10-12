@@ -1,6 +1,7 @@
 import { Lexer } from "../src/lexers/lexer";
 import { Token } from "../src/tokens/token";
 import * as fs from "fs";
+import * as os from "os";
 import * as toml from "@iarna/toml";
 
 interface TestEntry {
@@ -50,7 +51,7 @@ test("test from Jfol.Test tokens", () => {
 
     for (const testData of testDatas) {
         test(testData.name, () => {
-            const tokens = lexer.analyzeToken(testData.jfol.substring(0, testData.jfol.length - 2)); // cut last \r\n
+            const tokens = lexer.analyzeToken(testData.jfol.substring(0, testData.jfol.length - os.EOL.length)); // cut last line break
             testTokens(testData.tokens, tokens);
         });
     }

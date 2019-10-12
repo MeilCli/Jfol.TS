@@ -51,7 +51,9 @@ test("test from Jfol.Test tokens", () => {
 
     for (const testData of testDatas) {
         test(testData.name, () => {
-            const tokens = lexer.analyzeToken(testData.jfol.substring(0, testData.jfol.length - os.EOL.length)); // cut last line break
+            // cut last line break and replace line break
+            const source = testData.jfol.substring(0, testData.jfol.length - os.EOL.length).replace(os.EOL, "\n");
+            const tokens = lexer.analyzeToken(source);
             testTokens(testData.tokens, tokens);
         });
     }

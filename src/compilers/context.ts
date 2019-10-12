@@ -1,6 +1,13 @@
 export class Context {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(public instance: any, public index = 0, public length = 0) {}
+    constructor(public instance: any, private parent: Context | null, public index = 0, public length = 0) {}
+
+    getParent(): Context {
+        if (this.parent == null) {
+            throw Error("parent is null");
+        }
+        return this.parent;
+    }
 
     inString(): boolean {
         return typeof this.instance == "string";
@@ -69,9 +76,9 @@ export class Context {
 
     getObject(nameOrIndex: string | number): Context {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.instance[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], this, nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.instance[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex], this);
     }
 
     isArray(nameOrIndex: string | number): boolean {
@@ -84,8 +91,8 @@ export class Context {
 
     getArray(nameOrIndex: string | number): Context {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.instance[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], this, nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.instance[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex], this);
     }
 }

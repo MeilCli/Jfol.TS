@@ -167,3 +167,16 @@ test("array - root - compile", () => {
 
     expect(compiler.format(jfol, json)).toBe(`value: 1`);
 });
+
+test("parent", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$value[$$parent[$text]]`;
+
+    expect(compiler.format(jfol, json)).toBe(`hello`);
+});

@@ -225,7 +225,10 @@ export class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftSquareBracket") {
+        if (
+            nextToken.type != "LeftSquareBracket" ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length
+        ) {
             return { fieldNodes: fieldNodes } as FieldParentNode;
         }
 
@@ -307,7 +310,10 @@ export class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftParenthesis" && nextToken.type != "LeftSquareBracket") {
+        if (
+            (nextToken.type != "LeftParenthesis" && nextToken.type != "LeftSquareBracket") ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length
+        ) {
             return { functionNodes: functionNodes } as FunctionParentNode;
         }
 
@@ -359,7 +365,10 @@ export class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftSquareBracket") {
+        if (
+            nextToken.type != "LeftSquareBracket" ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length
+        ) {
             if (argumentNodes.length == 0) {
                 return { functionNodes: functionNodes } as FunctionParentNode;
             } else {

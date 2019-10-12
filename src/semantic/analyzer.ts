@@ -125,11 +125,24 @@ export class Analyzer {
     // Result Format: Operator, Value, Value
     private convertToReversePolishNotation(expressionNode: ExpressionNode): ExpressionNode {
         if (expressionNode.expression.length == 1) {
+            if (isExpressionNode(expressionNode.expression[0])) {
+                return this.convertToReversePolishNotation(expressionNode.expression[0]);
+            }
             return expressionNode;
         }
         if (expressionNode.expression.length == 3) {
+            let first = expressionNode.expression[0];
+            let third = expressionNode.expression[2];
+
+            if (isExpressionNode(first)) {
+                first = this.convertToReversePolishNotation(first);
+            }
+            if (isExpressionNode(third)) {
+                third = this.convertToReversePolishNotation(third);
+            }
+
             return {
-                expression: [expressionNode.expression[1], expressionNode.expression[0], expressionNode.expression[2]]
+                expression: [expressionNode.expression[1], first, third]
             } as ExpressionNode;
         }
 
@@ -207,6 +220,9 @@ export class Analyzer {
         if (expressionNode.expression.length == 1) {
             if (isValueNode(expressionNode.expression[0]) == false) {
                 throw Error("internal analyzer error, not single value");
+            }
+            if (isExpressionNode(expressionNode.expression[0])) {
+                this.checkExpression(expressionNode.expression[0]);
             }
             return;
         }

@@ -19,6 +19,7 @@
         "@types/iarna__toml": "^2.0.0",
         "@types/jest": "^24.0.18",
         "@types/node": "^12.7.11",
+        "@types/yaml": "^1.2.0",
         "@typescript-eslint/eslint-plugin": "^2.3.2",
         "@typescript-eslint/parser": "^2.3.2",
         "browserify": "^16.5.0",
@@ -29,7 +30,8 @@
         "jest-circus": "^24.9.0",
         "prettier": "^1.18.2",
         "ts-jest": "^24.1.0",
-        "typescript": "^3.6.3"
+        "typescript": "^3.6.3",
+        "yaml": "^1.7.1"
     },
     "prettier": {
         "printWidth": 120,

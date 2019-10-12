@@ -1,9 +1,7 @@
 import { Lexer } from "../src/lexers/lexer";
 import { Parser } from "../src/ast/parser";
 import { Analyzer } from "../src/semantic/analyzer";
-import { Node, ParentNode } from "../src/nodes/node";
 import * as fs from "fs";
-import * as os from "os";
 import * as yaml from "yaml";
 
 interface TestData {

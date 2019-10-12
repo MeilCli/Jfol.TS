@@ -25,4 +25,12 @@ export class TextObject implements Object {
     executeNull(): null {
         throw new Error("Method not implemented.");
     }
+
+    executeObject(): object {
+        throw new Error("Method not implemented.");
+    }
+
+    executeArray(): object[] {
+        throw new Error("Method not implemented.");
+    }
 }

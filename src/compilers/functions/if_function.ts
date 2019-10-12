@@ -51,4 +51,12 @@ export class IfFunction extends Function {
     executeNull(): null {
         throw new Error("Method not implemented.");
     }
+
+    executeObject(): object {
+        throw new Error("Method not implemented.");
+    }
+
+    executeArray(): object[] {
+        throw new Error("Method not implemented.");
+    }
 }

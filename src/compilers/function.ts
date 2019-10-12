@@ -56,4 +56,6 @@ export abstract class Function implements Object {
     abstract executeBoolean(): boolean;
     abstract executeNumber(): number;
     abstract executeNull(): null;
+    abstract executeObject(): object;
+    abstract executeArray(): object[];
 }

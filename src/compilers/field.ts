@@ -184,4 +184,12 @@ export class Field implements Object {
     executeNull(): null {
         return null;
     }
+
+    executeObject(): object {
+        return this.context.getObject(this.identifier).instance;
+    }
+
+    executeArray(): object[] {
+        return this.context.getArray(this.identifier).instance;
+    }
 }

@@ -36,13 +36,13 @@ export class ValueFunction extends Function {
 
     executeString(): string {
         if (this.context.inString()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inBoolean()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inNumber()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inNull()) {
             return "null";
@@ -52,14 +52,14 @@ export class ValueFunction extends Function {
 
     executeBoolean(): boolean {
         if (this.context.inBoolean()) {
-            return Boolean(this.context.json);
+            return Boolean(this.context.instance);
         }
         throw new Error("Method not implemented.");
     }
 
     executeNumber(): number {
         if (this.context.inNumber()) {
-            return Number(this.context.json);
+            return Number(this.context.instance);
         }
         throw new Error("Method not implemented.");
     }
@@ -68,6 +68,14 @@ export class ValueFunction extends Function {
         if (this.context.inNull()) {
             return null;
         }
+        throw new Error("Method not implemented.");
+    }
+
+    executeObject(): object {
+        throw new Error("Method not implemented.");
+    }
+
+    executeArray(): object[] {
         throw new Error("Method not implemented.");
     }
 }

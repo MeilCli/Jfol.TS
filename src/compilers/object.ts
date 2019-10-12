@@ -6,4 +6,6 @@ export interface Object {
     executeBoolean(): boolean;
     executeNumber(): number;
     executeNull(): null;
+    executeObject(): object;
+    executeArray(): object[];
 }

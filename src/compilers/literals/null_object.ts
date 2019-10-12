@@ -24,4 +24,12 @@ export class NullObject implements Object {
     executeNull(): null {
         return this.nullNode.nullValue;
     }
+
+    executeObject(): object {
+        throw new Error("Method not implemented.");
+    }
+
+    executeArray(): object[] {
+        throw new Error("Method not implemented.");
+    }
 }

@@ -1,87 +1,91 @@
 export class Context {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(public json: any, public index = 0, public length = 0) {}
+    constructor(public instance: any, public index = 0, public length = 0) {}
 
     inString(): boolean {
-        return typeof this.json == "string";
+        return typeof this.instance == "string";
     }
 
     inNumber(): boolean {
-        return typeof this.json == "number";
+        return typeof this.instance == "number";
     }
 
     inBoolean(): boolean {
-        return typeof this.json == "boolean";
+        return typeof this.instance == "boolean";
     }
 
     inNull(): boolean {
-        return typeof this.json == "object" && this.json == null;
+        return typeof this.instance == "object" && this.instance == null;
     }
 
     inObject(): boolean {
-        return typeof this.json == "object" && this.json != null && Array.isArray(this.json) == false;
+        return typeof this.instance == "object" && this.instance != null && Array.isArray(this.instance) == false;
     }
 
     inArray(): boolean {
-        return typeof this.json == "object" && Array.isArray(this.json);
+        return typeof this.instance == "object" && Array.isArray(this.instance);
     }
 
     isString(nameOrIndex: string | number): boolean {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "string";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "string";
     }
 
     getString(nameOrIndex: string | number): string {
-        return String(this.json[nameOrIndex]);
+        return String(this.instance[nameOrIndex]);
     }
 
     isNumber(nameOrIndex: string | number): boolean {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "number";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "number";
     }
 
     getNumber(nameOrIndex: string | number): number {
-        return Number(this.json[nameOrIndex]);
+        return Number(this.instance[nameOrIndex]);
     }
 
     isBoolean(nameOrIndex: string | number): boolean {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "boolean";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "boolean";
     }
 
     getBoolean(nameOrIndex: string | number): boolean {
-        return Boolean(this.json[nameOrIndex]);
+        return Boolean(this.instance[nameOrIndex]);
     }
 
     isNull(nameOrIndex: string | number): boolean {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "object" && this.json[nameOrIndex] == null;
+        return (
+            nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            this.instance[nameOrIndex] == null
+        );
     }
 
     isObject(nameOrIndex: string | number): boolean {
         return (
-            nameOrIndex in this.json &&
-            typeof this.json[nameOrIndex] == "object" &&
-            this.json[nameOrIndex] != null &&
-            Array.isArray(this.json[nameOrIndex]) == false
+            nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            this.instance[nameOrIndex] != null &&
+            Array.isArray(this.instance[nameOrIndex]) == false
         );
     }
 
     getObject(nameOrIndex: string | number): Context {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.json[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.json[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex]);
     }
 
     isArray(nameOrIndex: string | number): boolean {
         return (
-            nameOrIndex in this.json &&
-            typeof this.json[nameOrIndex] == "object" &&
-            Array.isArray(this.json[nameOrIndex])
+            nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            Array.isArray(this.instance[nameOrIndex])
         );
     }
 
     getArray(nameOrIndex: string | number): Context {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.json[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.json[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex]);
     }
 }

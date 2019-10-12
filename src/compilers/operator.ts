@@ -44,4 +44,6 @@ export abstract class Operator implements Object {
     abstract executeBoolean(): boolean;
     abstract executeNumber(): number;
     abstract executeNull(): null;
+    abstract executeObject(): object;
+    abstract executeArray(): object[];
 }

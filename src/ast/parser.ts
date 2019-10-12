@@ -493,7 +493,7 @@ export class Parser {
             "RightParenthesis"
         );
 
-        context.consumedCount += foundTokens.length;
+        context.consumedCount += foundTokens.length - 1;
         const nodes = this.childParseToken(foundTokens.slice(1, foundTokens.length - 1), true);
         const expression: Array<
             FieldParentNode | FunctionParentNode | LiteralNode | OperatorNode | ExpressionNode

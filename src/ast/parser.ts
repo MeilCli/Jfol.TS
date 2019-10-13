@@ -71,11 +71,13 @@ export class Parser {
                 } else {
                     whileStringLiteral = false;
                     result.push(new NumberedToken({ rawText: text, type: "String" }, literalOffset));
+                    text = "";
                 }
             } else if (whileStringLiteral) {
                 text += token.rawText;
             } else {
                 result.push(token);
+                text = "";
             }
         }
 

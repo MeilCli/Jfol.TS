@@ -119,4 +119,12 @@ export class Context {
     setArray(nameOrIndex: string | number, value: object[]) {
         this.instance[nameOrIndex] = value;
     }
+
+    delete(nameOrIndex: string | number) {
+        if (typeof nameOrIndex == "number" && Array.isArray(this.instance)) {
+            this.instance.splice(nameOrIndex, 1);
+            return;
+        }
+        delete this.instance[nameOrIndex];
+    }
 }

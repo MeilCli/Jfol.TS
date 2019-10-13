@@ -215,3 +215,36 @@ test("json with argument", () => {
 
     expect(compiler.format(jfol, json)).toBe(text);
 });
+
+test("json create no-copy", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$$setObject("value2",$value)$$(value.setBoolean)("flag",true)$$json($value2)`;
+    const text = `{
+    "text": "test",
+    "flag": true
+}`;
+
+    expect(compiler.format(jfol, json)).toBe(text);
+});
+
+test("json create copy", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$$copy("value2",$value)$$(value.setBoolean)("flag",true)$$(value.delete)("text")$$json($value2)`;
+    const text = `{
+    "text": "test"
+}`;
+
+    expect(compiler.format(jfol, json)).toBe(text);
+});

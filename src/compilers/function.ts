@@ -9,7 +9,6 @@ import {
     isFunctionParentNodeWithBody
 } from "../nodes/function_node";
 import { isFieldParentNode } from "../nodes/field_node";
-import { LiteralNode } from "../nodes/literal_node";
 import { isTextNode } from "../nodes/text_node";
 import { Context } from "./context";
 

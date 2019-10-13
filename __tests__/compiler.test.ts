@@ -248,3 +248,23 @@ test("json create copy", () => {
 
     expect(compiler.format(jfol, json)).toBe(text);
 });
+
+test("no text", () => {
+    const compiler = new Compiler();
+    const json = `{
+    "value": {
+        "text": "test"
+    },
+    "text": "hello"
+}`;
+    const jfol = `$$noText[
+        $$copy("value2",$value)
+        $$(value.setBoolean)("flag",true)
+        $$(value.delete)("text")
+        ]$$json($value2)`;
+    const text = `{
+    "text": "test"
+}`;
+
+    expect(compiler.format(jfol, json)).toBe(text);
+});

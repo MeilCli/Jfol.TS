@@ -23,6 +23,7 @@ import { SetObjectFunction } from "./functions/set_object_function";
 import { SetStringFunction } from "./functions/set_string_function";
 import { CopyFunction } from "./functions/copy_function";
 import { DeleteFunction } from "./functions/delete_function";
+import { NoTextFunction } from "./functions/no_text_function";
 
 class FormatCompilerPlugin extends CompilerPlugin {
     functions: [string, (arg0: Context, arg1: FunctionParentNode) => Function][] = [
@@ -33,6 +34,7 @@ class FormatCompilerPlugin extends CompilerPlugin {
         ["index", (x, y) => new IndexFunction(this, x, y)],
         ["json", (x, y) => new JsonFunction(this, x, y)],
         ["length", (x, y) => new LengthFunction(this, x, y)],
+        ["noText", (x, y) => new NoTextFunction(this, x, y)],
         ["number", (x, y) => new NumberFunction(this, x, y)],
         ["parent", (x, y) => new ParentFunction(this, x, y)],
         ["separator", (x, y) => new SeparatorFunction(this, x, y)],

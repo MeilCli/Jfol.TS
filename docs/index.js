@@ -55,6 +55,7 @@ class Parser {
                 else {
                     whileStringLiteral = false;
                     result.push(new NumberedToken({ rawText: text, type: "String" }, literalOffset));
+                    text = "";
                 }
             }
             else if (whileStringLiteral) {
@@ -62,6 +63,7 @@ class Parser {
             }
             else {
                 result.push(token);
+                text = "";
             }
         }
         if (whileStringLiteral) {
@@ -195,7 +197,8 @@ class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftSquareBracket") {
+        if (nextToken.type != "LeftSquareBracket" ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length) {
             return { fieldNodes: fieldNodes };
         }
         /**
@@ -262,7 +265,8 @@ class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftParenthesis" && nextToken.type != "LeftSquareBracket") {
+        if ((nextToken.type != "LeftParenthesis" && nextToken.type != "LeftSquareBracket") ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length) {
             return { functionNodes: functionNodes };
         }
         /**
@@ -300,7 +304,8 @@ class Parser {
         if (context.symbolIndex + 1 + context.consumedCount < context.tokens.length) {
             nextToken = context.tokens[context.symbolIndex + 1 + context.consumedCount];
         }
-        if (nextToken.type != "LeftSquareBracket") {
+        if (nextToken.type != "LeftSquareBracket" ||
+            context.symbolIndex + 1 + context.consumedCount == context.tokens.length) {
             if (argumentNodes.length == 0) {
                 return { functionNodes: functionNodes };
             }
@@ -398,7 +403,7 @@ class Parser {
     }
     parseExpression(context) {
         const foundTokens = this.getBracketTokensUntilFindTarget(context.tokens, context.symbolIndex, "LeftParenthesis", "RightParenthesis");
-        context.consumedCount += foundTokens.length;
+        context.consumedCount += foundTokens.length - 1;
         const nodes = this.childParseToken(foundTokens.slice(1, foundTokens.length - 1), true);
         const expression = [];
         for (const node of nodes) {
@@ -535,7 +540,7 @@ class Parser {
 }
 exports.Parser = Parser;
 
-},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/operator_node":40}],2:[function(require,module,exports){
+},{"../nodes/expression_node":47,"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/literal_node":50,"../nodes/operator_node":51}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const compiler_plugin_1 = require("./compiler_plugin");
@@ -551,16 +556,38 @@ const lexer_1 = require("../lexers/lexer");
 const parser_1 = require("../ast/parser");
 const analyzer_1 = require("../semantic/analyzer");
 const eval_function_1 = require("./functions/eval_function");
+const parent_function_1 = require("./functions/parent_function");
+const json_function_1 = require("./functions/json_function");
+const set_array_function_1 = require("./functions/set_array_function");
+const set_boolean_function_1 = require("./functions/set_boolean_function");
+const set_null_function_1 = require("./functions/set_null_function");
+const set_number_function_1 = require("./functions/set_number_function");
+const set_object_function_1 = require("./functions/set_object_function");
+const set_string_function_1 = require("./functions/set_string_function");
+const copy_function_1 = require("./functions/copy_function");
+const delete_function_1 = require("./functions/delete_function");
+const no_text_function_1 = require("./functions/no_text_function");
 class FormatCompilerPlugin extends compiler_plugin_1.CompilerPlugin {
     constructor() {
         super(...arguments);
         this.functions = [
+            ["copy", (x, y) => new copy_function_1.CopyFunction(this, x, y)],
+            ["delete", (x, y) => new delete_function_1.DeleteFunction(this, x, y)],
             ["eval", (x, y) => new eval_function_1.EvalFunction(this, x, y)],
             ["if", (x, y) => new if_function_1.IfFunction(this, x, y)],
             ["index", (x, y) => new index_function_1.IndexFunction(this, x, y)],
+            ["json", (x, y) => new json_function_1.JsonFunction(this, x, y)],
             ["length", (x, y) => new length_function_1.LengthFunction(this, x, y)],
+            ["noText", (x, y) => new no_text_function_1.NoTextFunction(this, x, y)],
             ["number", (x, y) => new number_function_1.NumberFunction(this, x, y)],
+            ["parent", (x, y) => new parent_function_1.ParentFunction(this, x, y)],
             ["separator", (x, y) => new separator_function_1.SeparatorFunction(this, x, y)],
+            ["setArray", (x, y) => new set_array_function_1.SetArrayFunction(this, x, y)],
+            ["setBoolean", (x, y) => new set_boolean_function_1.SetBooleanFunction(this, x, y)],
+            ["setNull", (x, y) => new set_null_function_1.SetNullFunction(this, x, y)],
+            ["setNumber", (x, y) => new set_number_function_1.SetNumberFunction(this, x, y)],
+            ["setObject", (x, y) => new set_object_function_1.SetObjectFunction(this, x, y)],
+            ["setString", (x, y) => new set_string_function_1.SetStringFunction(this, x, y)],
             ["value", (x, y) => new value_function_1.ValueFunction(this, x, y)],
             ["where", (x, y) => new where_function_1.WhereFunction(this, x, y)]
         ];
@@ -574,7 +601,7 @@ class Compiler {
         const compilerPlugin = new FormatCompilerPlugin();
         const parentNode = analyzer.analyze(parser.parseToken(lexer.analyzeToken(jfol)));
         const value = JSON.parse(json);
-        const context = new context_1.Context(value);
+        const context = new context_1.Context(value, null);
         let text = "";
         for (const node of parentNode.nodes) {
             // eslint-disable-next-line @typescript-eslint/ban-types
@@ -586,7 +613,7 @@ class Compiler {
 }
 exports.Compiler = Compiler;
 
-},{"../ast/parser":1,"../lexers/lexer":35,"../semantic/analyzer":42,"./compiler_plugin":3,"./context":4,"./functions/eval_function":7,"./functions/if_function":8,"./functions/index_function":9,"./functions/length_function":10,"./functions/number_function":11,"./functions/separator_function":12,"./functions/value_function":13,"./functions/where_function":14}],3:[function(require,module,exports){
+},{"../ast/parser":1,"../lexers/lexer":46,"../semantic/analyzer":53,"./compiler_plugin":3,"./context":4,"./functions/copy_function":7,"./functions/delete_function":8,"./functions/eval_function":9,"./functions/if_function":10,"./functions/index_function":11,"./functions/json_function":12,"./functions/length_function":13,"./functions/no_text_function":14,"./functions/number_function":15,"./functions/parent_function":16,"./functions/separator_function":17,"./functions/set_array_function":18,"./functions/set_boolean_function":19,"./functions/set_null_function":20,"./functions/set_number_function":21,"./functions/set_object_function":22,"./functions/set_string_function":23,"./functions/value_function":24,"./functions/where_function":25}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -624,11 +651,14 @@ class CompilerPlugin {
         if (field_node_1.isFieldParentNode(node)) {
             return this.getFieldObject(context, node);
         }
+        if (expression_node_1.isExpressionNode(node)) {
+            if (node.expression.length == 1) {
+                return this.getObject(context, node.expression[0]);
+            }
+            return this.getOperatorObject(context, node);
+        }
         if (literal_node_1.isLiteralNode(node)) {
             return this.getLiteralObject(node);
-        }
-        if (expression_node_1.isExpressionNode(node)) {
-            return this.getOperatorObject(context, node);
         }
         throw Error("internal compiler error, cannot handle node");
     }
@@ -711,77 +741,111 @@ class CompilerPlugin {
 }
 exports.CompilerPlugin = CompilerPlugin;
 
-},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/text_node":41,"./field":5,"./literals/boolean_object":15,"./literals/null_object":16,"./literals/number_object":17,"./literals/string_object":18,"./operators/asterisk_operator":20,"./operators/double_ampersand_operator":21,"./operators/double_vertical_line_operator":22,"./operators/equal_operator":23,"./operators/greater_than_operator":24,"./operators/greater_than_or_equal_operator":25,"./operators/less_than_operator":26,"./operators/less_than_or_equal_operator":27,"./operators/minus_operator":28,"./operators/not_equal_operator":29,"./operators/percent_operator":30,"./operators/plus_operator":31,"./operators/slash_operator":32,"./text":33}],4:[function(require,module,exports){
+},{"../nodes/expression_node":47,"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/literal_node":50,"../nodes/text_node":52,"./field":5,"./literals/boolean_object":26,"./literals/null_object":27,"./literals/number_object":28,"./literals/string_object":29,"./operators/asterisk_operator":31,"./operators/double_ampersand_operator":32,"./operators/double_vertical_line_operator":33,"./operators/equal_operator":34,"./operators/greater_than_operator":35,"./operators/greater_than_or_equal_operator":36,"./operators/less_than_operator":37,"./operators/less_than_or_equal_operator":38,"./operators/minus_operator":39,"./operators/not_equal_operator":40,"./operators/percent_operator":41,"./operators/plus_operator":42,"./operators/slash_operator":43,"./text":44}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Context {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(json, index = 0, length = 0) {
-        this.json = json;
+    constructor(instance, parent, index = 0, length = 0) {
+        this.instance = instance;
+        this.parent = parent;
         this.index = index;
         this.length = length;
     }
+    getParent() {
+        if (this.parent == null) {
+            throw Error("parent is null");
+        }
+        return this.parent;
+    }
     inString() {
-        return typeof this.json == "string";
+        return typeof this.instance == "string";
     }
     inNumber() {
-        return typeof this.json == "number";
+        return typeof this.instance == "number";
     }
     inBoolean() {
-        return typeof this.json == "boolean";
+        return typeof this.instance == "boolean";
     }
     inNull() {
-        return typeof this.json == "object" && this.json == null;
+        return typeof this.instance == "object" && this.instance == null;
     }
     inObject() {
-        return typeof this.json == "object" && this.json != null && Array.isArray(this.json) == false;
+        return typeof this.instance == "object" && this.instance != null && Array.isArray(this.instance) == false;
     }
     inArray() {
-        return typeof this.json == "object" && Array.isArray(this.json);
+        return typeof this.instance == "object" && Array.isArray(this.instance);
     }
     isString(nameOrIndex) {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "string";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "string";
     }
     getString(nameOrIndex) {
-        return String(this.json[nameOrIndex]);
+        return String(this.instance[nameOrIndex]);
+    }
+    setString(nameOrIndex, value) {
+        this.instance[nameOrIndex] = value;
     }
     isNumber(nameOrIndex) {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "number";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "number";
     }
     getNumber(nameOrIndex) {
-        return Number(this.json[nameOrIndex]);
+        return Number(this.instance[nameOrIndex]);
+    }
+    setNumber(nameOrIndex, value) {
+        this.instance[nameOrIndex] = value;
     }
     isBoolean(nameOrIndex) {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "boolean";
+        return nameOrIndex in this.instance && typeof this.instance[nameOrIndex] == "boolean";
     }
     getBoolean(nameOrIndex) {
-        return Boolean(this.json[nameOrIndex]);
+        return Boolean(this.instance[nameOrIndex]);
+    }
+    setBoolean(nameOrIndex, value) {
+        this.instance[nameOrIndex] = value;
     }
     isNull(nameOrIndex) {
-        return nameOrIndex in this.json && typeof this.json[nameOrIndex] == "object" && this.json[nameOrIndex] == null;
+        return (nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            this.instance[nameOrIndex] == null);
+    }
+    setNull(nameOrIndex) {
+        this.instance[nameOrIndex] = null;
     }
     isObject(nameOrIndex) {
-        return (nameOrIndex in this.json &&
-            typeof this.json[nameOrIndex] == "object" &&
-            this.json[nameOrIndex] != null &&
-            Array.isArray(this.json[nameOrIndex]) == false);
+        return (nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            this.instance[nameOrIndex] != null &&
+            Array.isArray(this.instance[nameOrIndex]) == false);
     }
     getObject(nameOrIndex) {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.json[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], this, nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.json[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex], this);
+    }
+    setObject(nameOrIndex, value) {
+        this.instance[nameOrIndex] = value;
     }
     isArray(nameOrIndex) {
-        return (nameOrIndex in this.json &&
-            typeof this.json[nameOrIndex] == "object" &&
-            Array.isArray(this.json[nameOrIndex]));
+        return (nameOrIndex in this.instance &&
+            typeof this.instance[nameOrIndex] == "object" &&
+            Array.isArray(this.instance[nameOrIndex]));
     }
     getArray(nameOrIndex) {
         if (typeof nameOrIndex == "number") {
-            return new Context(this.json[nameOrIndex], nameOrIndex, this.getNumber("length"));
+            return new Context(this.instance[nameOrIndex], this, nameOrIndex, this.getNumber("length"));
         }
-        return new Context(this.json[nameOrIndex]);
+        return new Context(this.instance[nameOrIndex], this);
+    }
+    setArray(nameOrIndex, value) {
+        this.instance[nameOrIndex] = value;
+    }
+    delete(nameOrIndex) {
+        if (typeof nameOrIndex == "number" && Array.isArray(this.instance)) {
+            this.instance.splice(nameOrIndex, 1);
+            return;
+        }
+        delete this.instance[nameOrIndex];
     }
 }
 exports.Context = Context;
@@ -887,9 +951,13 @@ class Field {
         });
     }
     objectTypes() {
-        if (this.context.isArray(this.identifier) ||
-            this.context.isObject(this.identifier) ||
-            this.context.isString(this.identifier)) {
+        if (this.context.isObject(this.identifier)) {
+            return ["Object"];
+        }
+        if (this.context.isArray(this.identifier)) {
+            return ["Array"];
+        }
+        if (this.context.isString(this.identifier)) {
             return ["String"];
         }
         if (this.context.isNumber(this.identifier)) {
@@ -941,10 +1009,16 @@ class Field {
     executeNull() {
         return null;
     }
+    executeObject() {
+        return this.context.getObject(this.identifier).instance;
+    }
+    executeArray() {
+        return this.context.getArray(this.identifier).instance;
+    }
 }
 exports.Field = Field;
 
-},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/text_node":41,"./functions/separator_function":12,"./functions/where_function":14}],6:[function(require,module,exports){
+},{"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/text_node":52,"./functions/separator_function":17,"./functions/where_function":25}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -955,14 +1029,7 @@ class Function {
         this.compilerPlugin = compilerPlugin;
         this.functionIdentifires = functionParentNode.functionNodes.map(x => x.functionIdentifier);
         if (function_node_1.isFunctionParentNodeWithArgument(functionParentNode)) {
-            this.functionArguments = functionParentNode.functionArguments.map(x => {
-                if (x.expression.length == 1) {
-                    return compilerPlugin.getLiteralObject(x.expression[0]);
-                }
-                else {
-                    return compilerPlugin.getOperatorObject(context, x);
-                }
-            });
+            this.functionArguments = functionParentNode.functionArguments.map(x => compilerPlugin.getObject(context, x));
         }
         else {
             this.functionArguments = null;
@@ -988,7 +1055,145 @@ class Function {
 }
 exports.Function = Function;
 
-},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/text_node":41}],7:[function(require,module,exports){
+},{"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/text_node":52}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deepCopy(source) {
+    if (typeof source != "object") {
+        return source;
+    }
+    if (Array.isArray(source)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const array = [];
+        for (const element of source) {
+            array.push(deepCopy(element));
+        }
+        return array;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = {};
+    for (const key in source) {
+        const value = source[key];
+        if (typeof value == "object") {
+            result[key] = deepCopy(value);
+        }
+        else {
+            result[key] = value;
+        }
+    }
+    return result;
+}
+class CopyFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("copy function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("copy function first argumetn must be string");
+        }
+    }
+    copy() {
+        if (this.value.objectTypes().includes("Object")) {
+            this.context.setObject(this.name.executeString(), deepCopy(this.value.executeObject()));
+            return;
+        }
+        if (this.value.objectTypes().includes("Array")) {
+            this.context.setObject(this.name.executeString(), deepCopy(this.value.executeArray()));
+            return;
+        }
+        if (this.value.objectTypes().includes("Boolean")) {
+            this.context.setBoolean(this.name.executeString(), this.value.executeBoolean());
+            return;
+        }
+        if (this.value.objectTypes().includes("Number")) {
+            this.context.setNumber(this.name.executeString(), this.value.executeNumber());
+            return;
+        }
+        if (this.value.objectTypes().includes("Null")) {
+            this.context.setNull(this.name.executeString());
+            return;
+        }
+        this.context.setString(this.name.executeString(), this.value.executeString());
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        this.copy();
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.CopyFunction = CopyFunction;
+
+},{"../function":6}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class DeleteFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 1) {
+            throw Error("delete function must have single argument");
+        }
+        this.name = this.functionArguments[0];
+        if (this.name.objectTypes().includes("String") == false &&
+            this.name.objectTypes().includes("Number") == false) {
+            throw Error("delete function first argumetn must be string or number");
+        }
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        if (this.name.objectTypes().includes("Number")) {
+            this.context.delete(this.name.executeNumber());
+        }
+        else {
+            this.context.delete(this.name.executeString());
+        }
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.DeleteFunction = DeleteFunction;
+
+},{"../function":6}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1027,10 +1232,16 @@ class EvalFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.EvalFunction = EvalFunction;
 
-},{"../function":6}],8:[function(require,module,exports){
+},{"../function":6}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1070,10 +1281,16 @@ class IfFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.IfFunction = IfFunction;
 
-},{"../function":6}],9:[function(require,module,exports){
+},{"../function":6}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1103,10 +1320,87 @@ class IndexFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.IndexFunction = IndexFunction;
 
-},{"../function":6}],10:[function(require,module,exports){
+},{"../function":6}],12:[function(require,module,exports){
+"use strict";
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+const os = __importStar(require("os"));
+class JsonFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments != null && this.functionArguments.length != 1) {
+            throw Error("json function must have single or empty argument");
+        }
+        if (this.functionArguments != null) {
+            this.instance = this.functionArguments[0];
+        }
+        else {
+            this.instance = null;
+        }
+        if (this.functionBodies != null) {
+            throw Error("json function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        if (this.instance == null) {
+            return JSON.stringify(this.context.instance, null, 4).replace(/\n/g, os.EOL);
+        }
+        if (this.instance.objectTypes().includes("Array")) {
+            return JSON.stringify(this.instance.executeArray(), null, 4).replace(/\n/g, os.EOL);
+        }
+        if (this.instance.objectTypes().includes("Object")) {
+            return JSON.stringify(this.instance.executeObject(), null, 4).replace(/\n/g, os.EOL);
+        }
+        if (this.instance.objectTypes().includes("Number")) {
+            return JSON.stringify(this.instance.executeNumber(), null, 4);
+        }
+        if (this.instance.objectTypes().includes("Null")) {
+            return JSON.stringify(null, null, 4);
+        }
+        if (this.instance.objectTypes().includes("Boolean")) {
+            return JSON.stringify(this.instance.executeBoolean(), null, 4);
+        }
+        return JSON.stringify(this.instance.executeString());
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.JsonFunction = JsonFunction;
+
+},{"../function":6,"os":54}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1142,10 +1436,59 @@ class LengthFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.LengthFunction = LengthFunction;
 
-},{"../function":6}],11:[function(require,module,exports){
+},{"../function":6}],14:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class NoTextFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        if (this.functionArguments != null) {
+            throw Error("no text function must not have argument");
+        }
+        if (this.functionBodies == null) {
+            throw Error("no text function must have argument");
+        }
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        if (this.functionBodies != null) {
+            for (const body of this.functionBodies) {
+                body.executeString();
+            }
+        }
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.NoTextFunction = NoTextFunction;
+
+},{"../function":6}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1175,10 +1518,74 @@ class NumberFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.NumberFunction = NumberFunction;
 
-},{"../function":6}],12:[function(require,module,exports){
+},{"../function":6}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+const function_node_1 = require("../../nodes/function_node");
+const field_node_1 = require("../../nodes/field_node");
+const text_node_1 = require("../../nodes/text_node");
+class ParentFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        if (this.functionArguments != null) {
+            throw Error("parent function cannot have argument");
+        }
+        if (this.functionBodies == null) {
+            throw Error("if function must have bodies");
+        }
+        const functionParentNodeWithBody = functionParentNode;
+        this.bodies = functionParentNodeWithBody.functionBodies.map(x => {
+            if (field_node_1.isFieldParentNode(x)) {
+                return compilerPlugin.getFieldObject(context.getParent(), x);
+            }
+            if (function_node_1.isFunctionParentNode(x)) {
+                return compilerPlugin.getFunctionObject(context.getParent(), x);
+            }
+            if (text_node_1.isTextNode(x)) {
+                return compilerPlugin.getTextObject(x);
+            }
+            throw Error("internal compiler error, not found node");
+        });
+    }
+    objectTypes() {
+        return ["String"];
+    }
+    executeString() {
+        let text = "";
+        for (const body of this.bodies) {
+            text += body.executeString();
+        }
+        return text;
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.ParentFunction = ParentFunction;
+
+},{"../../nodes/field_node":48,"../../nodes/function_node":49,"../../nodes/text_node":52,"../function":6}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1212,10 +1619,310 @@ class SeparatorFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.SeparatorFunction = SeparatorFunction;
 
-},{"../function":6}],13:[function(require,module,exports){
+},{"../function":6}],18:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetArrayFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("set array function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set array function first argumetn must be string");
+        }
+        if (this.value.objectTypes().includes("Array") == false) {
+            throw Error("set array function second argumetn must be array");
+        }
+    }
+    setArray() {
+        const newArray = this.value.executeArray();
+        const name = this.name.executeString();
+        this.context.setObject(name, newArray);
+    }
+    objectTypes() {
+        return ["String", "Array"];
+    }
+    executeString() {
+        this.setArray();
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        this.setArray();
+        return this.context.instance;
+    }
+}
+exports.SetArrayFunction = SetArrayFunction;
+
+},{"../function":6}],19:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetBooleanFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("set boolean function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set boolean function first argumetn must be string");
+        }
+        if (this.value.objectTypes().includes("Boolean") == false) {
+            throw Error("set boolean function second argumetn must be boolean");
+        }
+        if (this.functionBodies != null) {
+            throw Error("set boolean function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String", "Object"];
+    }
+    executeString() {
+        this.context.setBoolean(this.name.executeString(), this.value.executeBoolean());
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        this.context.setBoolean(this.name.executeString(), this.value.executeBoolean());
+        return this.context.instance;
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.SetBooleanFunction = SetBooleanFunction;
+
+},{"../function":6}],20:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetNullFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 1) {
+            throw Error("set null function must have single argument");
+        }
+        this.name = this.functionArguments[0];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set null function first argumetn must be string");
+        }
+        if (this.functionBodies != null) {
+            throw Error("set null function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String", "Object"];
+    }
+    executeString() {
+        this.context.setNull(this.name.executeString());
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        this.context.setNull(this.name.executeString());
+        return this.context.instance;
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.SetNullFunction = SetNullFunction;
+
+},{"../function":6}],21:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetNumberFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("set number function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set number function first argumetn must be string");
+        }
+        if (this.value.objectTypes().includes("Number") == false) {
+            throw Error("set number function second argumetn must be number");
+        }
+        if (this.functionBodies != null) {
+            throw Error("set number function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String", "Object"];
+    }
+    executeString() {
+        this.context.setNumber(this.name.executeString(), this.value.executeNumber());
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        this.context.setNumber(this.name.executeString(), this.value.executeNumber());
+        return this.context.instance;
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.SetNumberFunction = SetNumberFunction;
+
+},{"../function":6}],22:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetObjectFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("set object function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set object function first argumetn must be string");
+        }
+        if (this.value.objectTypes().includes("Object") == false) {
+            throw Error("set object function second argumetn must be object");
+        }
+    }
+    setObject() {
+        const newObject = this.value.executeObject();
+        const name = this.name.executeString();
+        this.context.setObject(name, newObject);
+    }
+    objectTypes() {
+        return ["String", "Object"];
+    }
+    executeString() {
+        this.setObject();
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        this.setObject();
+        return this.context.instance;
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.SetObjectFunction = SetObjectFunction;
+
+},{"../function":6}],23:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const function_1 = require("../function");
+class SetStringFunction extends function_1.Function {
+    constructor(compilerPlugin, context, functionParentNode) {
+        super(compilerPlugin, context, functionParentNode);
+        this.context = context;
+        if (this.functionArguments == null || this.functionArguments.length != 2) {
+            throw Error("set string function must have two arguments");
+        }
+        this.name = this.functionArguments[0];
+        this.value = this.functionArguments[1];
+        if (this.name.objectTypes().includes("String") == false) {
+            throw Error("set string function first argumetn must be string");
+        }
+        if (this.value.objectTypes().includes("String") == false) {
+            throw Error("set string function second argumetn must be string");
+        }
+        if (this.functionBodies != null) {
+            throw Error("set string function cannot have body");
+        }
+    }
+    objectTypes() {
+        return ["String", "Object"];
+    }
+    executeString() {
+        this.context.setString(this.name.executeString(), this.value.executeString());
+        return "";
+    }
+    executeBoolean() {
+        throw new Error("Method not implemented.");
+    }
+    executeNumber() {
+        throw new Error("Method not implemented.");
+    }
+    executeNull() {
+        throw new Error("Method not implemented.");
+    }
+    executeObject() {
+        this.context.setString(this.name.executeString(), this.value.executeString());
+        return this.context.instance;
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
+}
+exports.SetStringFunction = SetStringFunction;
+
+},{"../function":6}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1247,13 +1954,13 @@ class ValueFunction extends function_1.Function {
     }
     executeString() {
         if (this.context.inString()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inBoolean()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inNumber()) {
-            return String(this.context.json);
+            return String(this.context.instance);
         }
         if (this.context.inNull()) {
             return "null";
@@ -1262,13 +1969,13 @@ class ValueFunction extends function_1.Function {
     }
     executeBoolean() {
         if (this.context.inBoolean()) {
-            return Boolean(this.context.json);
+            return Boolean(this.context.instance);
         }
         throw new Error("Method not implemented.");
     }
     executeNumber() {
         if (this.context.inNumber()) {
-            return Number(this.context.json);
+            return Number(this.context.instance);
         }
         throw new Error("Method not implemented.");
     }
@@ -1278,10 +1985,16 @@ class ValueFunction extends function_1.Function {
         }
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.ValueFunction = ValueFunction;
 
-},{"../function":6}],14:[function(require,module,exports){
+},{"../function":6}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_1 = require("../function");
@@ -1314,10 +2027,16 @@ class WhereFunction extends function_1.Function {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.WhereFunction = WhereFunction;
 
-},{"../function":6}],15:[function(require,module,exports){
+},{"../function":6}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class BooleanObject {
@@ -1339,10 +2058,16 @@ class BooleanObject {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.BooleanObject = BooleanObject;
 
-},{}],16:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class NullObject {
@@ -1364,10 +2089,16 @@ class NullObject {
     executeNull() {
         return this.nullNode.nullValue;
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.NullObject = NullObject;
 
-},{}],17:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class NumberObject {
@@ -1389,10 +2120,16 @@ class NumberObject {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.NumberObject = NumberObject;
 
-},{}],18:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class StringObject {
@@ -1414,10 +2151,16 @@ class StringObject {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.StringObject = StringObject;
 
-},{}],19:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const function_node_1 = require("../nodes/function_node");
@@ -1454,7 +2197,7 @@ class Operator {
 }
 exports.Operator = Operator;
 
-},{"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39}],20:[function(require,module,exports){
+},{"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/literal_node":50}],31:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1481,10 +2224,16 @@ class AsteriskOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.AsteriskOperator = AsteriskOperator;
 
-},{"../operator":19}],21:[function(require,module,exports){
+},{"../operator":30}],32:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1511,10 +2260,16 @@ class DoubleAmpersandOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.DoubleAmpersandOperator = DoubleAmpersandOperator;
 
-},{"../operator":19}],22:[function(require,module,exports){
+},{"../operator":30}],33:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1541,10 +2296,16 @@ class DoubleVerticalLineOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.DoubleVerticalLineOperator = DoubleVerticalLineOperator;
 
-},{"../operator":19}],23:[function(require,module,exports){
+},{"../operator":30}],34:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1580,10 +2341,16 @@ class EqualOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.EqualOperator = EqualOperator;
 
-},{"../operator":19}],24:[function(require,module,exports){
+},{"../operator":30}],35:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1610,10 +2377,16 @@ class GreaterThanOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.GreaterThanOperator = GreaterThanOperator;
 
-},{"../operator":19}],25:[function(require,module,exports){
+},{"../operator":30}],36:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1640,10 +2413,16 @@ class GreaterThanOrEqualOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.GreaterThanOrEqualOperator = GreaterThanOrEqualOperator;
 
-},{"../operator":19}],26:[function(require,module,exports){
+},{"../operator":30}],37:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1670,10 +2449,16 @@ class LessThanOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.LessThanOperator = LessThanOperator;
 
-},{"../operator":19}],27:[function(require,module,exports){
+},{"../operator":30}],38:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1700,10 +2485,16 @@ class LessThanOrEqualOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.LessThanOrEqualOperator = LessThanOrEqualOperator;
 
-},{"../operator":19}],28:[function(require,module,exports){
+},{"../operator":30}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1730,10 +2521,16 @@ class MinusOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.MinusOperator = MinusOperator;
 
-},{"../operator":19}],29:[function(require,module,exports){
+},{"../operator":30}],40:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1769,10 +2566,16 @@ class NotEqualOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.NotEqualOperator = NotEqualOperator;
 
-},{"../operator":19}],30:[function(require,module,exports){
+},{"../operator":30}],41:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1799,10 +2602,16 @@ class PercentOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.PercentOperator = PercentOperator;
 
-},{"../operator":19}],31:[function(require,module,exports){
+},{"../operator":30}],42:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1858,10 +2667,16 @@ class PlusOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.PlusOperator = PlusOperator;
 
-},{"../operator":19}],32:[function(require,module,exports){
+},{"../operator":30}],43:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const operator_1 = require("../operator");
@@ -1888,10 +2703,16 @@ class SlashOperator extends operator_1.Operator {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.SlashOperator = SlashOperator;
 
-},{"../operator":19}],33:[function(require,module,exports){
+},{"../operator":30}],44:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TextObject {
@@ -1913,10 +2734,16 @@ class TextObject {
     executeNull() {
         throw new Error("Method not implemented.");
     }
+    executeObject() {
+        throw new Error("Method not implemented.");
+    }
+    executeArray() {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.TextObject = TextObject;
 
-},{}],34:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const compiler_1 = require("./compilers/compiler");
@@ -1934,7 +2761,7 @@ form.getElementsByTagName("input")[0].onclick = function () {
     form.getElementsByTagName("textarea")[2].value = text;
 };
 
-},{"./compilers/compiler":2}],35:[function(require,module,exports){
+},{"./compilers/compiler":2}],46:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Lexer {
@@ -2158,6 +2985,11 @@ class Lexer {
                     addRawTextIfNeeded();
                     tokens.push({ rawText: c, type: "GreaterThan" });
                     break;
+                case "\r":
+                case "\n":
+                    addRawTextIfNeeded();
+                    text += c;
+                    break;
                 default:
                     text += c;
                     break;
@@ -2169,7 +3001,7 @@ class Lexer {
 }
 exports.Lexer = Lexer;
 
-},{}],36:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2178,7 +3010,7 @@ function isExpressionNode(arg) {
 }
 exports.isExpressionNode = isExpressionNode;
 
-},{}],37:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2197,7 +3029,7 @@ function isFieldParentNodeWithBody(arg) {
 }
 exports.isFieldParentNodeWithBody = isFieldParentNodeWithBody;
 
-},{}],38:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2226,7 +3058,7 @@ function isFunctionParentNodeWithArgumentAndBody(arg) {
 }
 exports.isFunctionParentNodeWithArgumentAndBody = isFunctionParentNodeWithArgumentAndBody;
 
-},{}],39:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2255,7 +3087,7 @@ function isLiteralNode(arg) {
 }
 exports.isLiteralNode = isLiteralNode;
 
-},{}],40:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2264,7 +3096,7 @@ function isOperatorNode(arg) {
 }
 exports.isOperatorNode = isOperatorNode;
 
-},{}],41:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2273,7 +3105,7 @@ function isTextNode(arg) {
 }
 exports.isTextNode = isTextNode;
 
-},{}],42:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const field_node_1 = require("../nodes/field_node");
@@ -2369,11 +3201,22 @@ class Analyzer {
     // Result Format: Operator, Value, Value
     convertToReversePolishNotation(expressionNode) {
         if (expressionNode.expression.length == 1) {
+            if (expression_node_1.isExpressionNode(expressionNode.expression[0])) {
+                return this.convertToReversePolishNotation(expressionNode.expression[0]);
+            }
             return expressionNode;
         }
         if (expressionNode.expression.length == 3) {
+            let first = expressionNode.expression[0];
+            let third = expressionNode.expression[2];
+            if (expression_node_1.isExpressionNode(first)) {
+                first = this.convertToReversePolishNotation(first);
+            }
+            if (expression_node_1.isExpressionNode(third)) {
+                third = this.convertToReversePolishNotation(third);
+            }
             return {
-                expression: [expressionNode.expression[1], expressionNode.expression[0], expressionNode.expression[2]]
+                expression: [expressionNode.expression[1], first, third]
             };
         }
         const operatorStack = [];
@@ -2445,6 +3288,9 @@ class Analyzer {
             if (isValueNode(expressionNode.expression[0]) == false) {
                 throw Error("internal analyzer error, not single value");
             }
+            if (expression_node_1.isExpressionNode(expressionNode.expression[0])) {
+                this.checkExpression(expressionNode.expression[0]);
+            }
             return;
         }
         if (expressionNode.expression.length != 3) {
@@ -2472,4 +3318,55 @@ class Analyzer {
 }
 exports.Analyzer = Analyzer;
 
-},{"../nodes/expression_node":36,"../nodes/field_node":37,"../nodes/function_node":38,"../nodes/literal_node":39,"../nodes/operator_node":40}]},{},[34]);
+},{"../nodes/expression_node":47,"../nodes/field_node":48,"../nodes/function_node":49,"../nodes/literal_node":50,"../nodes/operator_node":51}],54:[function(require,module,exports){
+exports.endianness = function () { return 'LE' };
+
+exports.hostname = function () {
+    if (typeof location !== 'undefined') {
+        return location.hostname
+    }
+    else return '';
+};
+
+exports.loadavg = function () { return [] };
+
+exports.uptime = function () { return 0 };
+
+exports.freemem = function () {
+    return Number.MAX_VALUE;
+};
+
+exports.totalmem = function () {
+    return Number.MAX_VALUE;
+};
+
+exports.cpus = function () { return [] };
+
+exports.type = function () { return 'Browser' };
+
+exports.release = function () {
+    if (typeof navigator !== 'undefined') {
+        return navigator.appVersion;
+    }
+    return '';
+};
+
+exports.networkInterfaces
+= exports.getNetworkInterfaces
+= function () { return {} };
+
+exports.arch = function () { return 'javascript' };
+
+exports.platform = function () { return 'browser' };
+
+exports.tmpdir = exports.tmpDir = function () {
+    return '/tmp';
+};
+
+exports.EOL = '\n';
+
+exports.homedir = function () {
+	return '/'
+};
+
+},{}]},{},[45]);

@@ -2,18 +2,23 @@
     "name": "jfol",
     "version": "0.0.1",
     "description": "JSON Formation Language",
-    "main": "index.js",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "files": [
+        "lib"
+    ],
     "scripts": {
-        "publish": "npm run build && npm run lint && npm run test && npm run bundle",
-        "debug": "npm run build && npm run bundle",
         "build": "tsc",
         "test": "jest",
-        "lint": "eslint src/**/*.ts",
-        "bundle": "browserify lib/index.js -o docs/index.js"
+        "lint": "eslint src/**/*.ts"
     },
-    "keywords": [],
-    "author": "",
+    "keywords": [
+        "JSON",
+        "Jfol"
+    ],
+    "author": "MeilCli",
     "license": "MIT",
+    "homepage": "https://github.com/MeilCli/Jfol.TS",
     "devDependencies": {
         "@iarna/toml": "^2.2.3",
         "@types/iarna__toml": "^2.0.0",
@@ -22,7 +27,6 @@
         "@types/yaml": "^1.2.0",
         "@typescript-eslint/eslint-plugin": "^2.3.2",
         "@typescript-eslint/parser": "^2.3.2",
-        "browserify": "^16.5.0",
         "eslint": "^6.5.1",
         "eslint-config-prettier": "^6.3.0",
         "eslint-plugin-prettier": "^3.1.1",

@@ -14,17 +14,17 @@ export class SetArrayFunction extends Function {
         super(compilerPlugin, context, functionParentNode);
 
         if (this.functionArguments == null || this.functionArguments.length != 2) {
-            throw Error("set object function must have two arguments");
+            throw Error("set array function must have two arguments");
         }
 
         this.name = this.functionArguments[0];
         this.value = this.functionArguments[1];
 
         if (this.name.objectTypes().includes("String") == false) {
-            throw Error("set object function first argumetn must be string");
+            throw Error("set array function first argumetn must be string");
         }
-        if (this.value.objectTypes().includes("Object") == false) {
-            throw Error("set object function second argumetn must be object");
+        if (this.value.objectTypes().includes("Array") == false) {
+            throw Error("set array function second argumetn must be array");
         }
     }
 

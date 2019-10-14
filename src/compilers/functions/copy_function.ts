@@ -59,6 +59,7 @@ export class CopyFunction extends Function {
         }
         if (this.value.objectTypes().includes("Array")) {
             this.context.setObject(this.name.executeString(), deepCopy(this.value.executeArray()));
+            return;
         }
         if (this.value.objectTypes().includes("Boolean")) {
             this.context.setBoolean(this.name.executeString(), this.value.executeBoolean());

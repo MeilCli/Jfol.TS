@@ -228,6 +228,11 @@ export class Lexer {
                     addRawTextIfNeeded();
                     tokens.push({ rawText: c, type: "GreaterThan" });
                     break;
+                case "\r":
+                case "\n":
+                    addRawTextIfNeeded();
+                    text += c;
+                    break;
                 default:
                     text += c;
                     break;
